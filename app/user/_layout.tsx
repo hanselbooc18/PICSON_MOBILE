@@ -33,12 +33,9 @@ export default function UserLayout() {
       />
 
       <Tabs.Screen
-        name="tracker"
+        name="patient/[qrCode]"
         options={{
-          title: "Tracker",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="location-outline" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
     </Tabs>

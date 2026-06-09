@@ -47,6 +47,10 @@ export function getMaternalProfileByQr(qrIdentifier: string) {
   );
 }
 
+export function getMyMaternalProfile() {
+  return apiRequest<MaternalQrProfile>(`/api/patient/me`);
+}
+
 export function extractQrIdentifier(rawValue: string) {
   const value = rawValue.trim();
 
@@ -54,8 +58,15 @@ export function extractQrIdentifier(rawValue: string) {
     return "";
   }
 
+  const cleaned = value.toUpperCase().replace(/\s+/g, " ").trim();
+
+  const prefixMatch = cleaned.match(/^(?:PATIENT\s*ID\s*[:\-]?\s*|QR\s*CODE\s*[:\-]?\s*)+(.*)$/i);
+  if (prefixMatch?.[1]) {
+    return prefixMatch[1].trim();
+  }
+
   try {
-    const url = new URL(value);
+    const url = new URL(cleaned);
     const queryQr = url.searchParams.get("qr") || url.searchParams.get("code");
 
     if (queryQr) {
@@ -68,8 +79,8 @@ export function extractQrIdentifier(rawValue: string) {
       return lastPathPart.trim().toUpperCase();
     }
   } catch {
-    return value.toUpperCase();
+    // If it is not a valid URL, continue to fallback return below.
   }
 
-  return value.toUpperCase();
+  return cleaned;
 }

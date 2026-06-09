@@ -38,8 +38,8 @@ export function getUserRole(user?: MobileUser | null) {
   return user?.roles?.role || user?.role || "";
 }
 
-export function isAdminUser(user?: MobileUser | null) {
-  return getUserRole(user).toLowerCase() === "admin";
+export function isStaffUser(user?: MobileUser | null) {
+  return getUserRole(user).toLowerCase() === "staff";
 }
 
 export async function getCurrentUser() {

@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { isAdminUser, login } from "@/api/auth";
+import { isStaffUser, login } from "@/api/auth";
 
 export default function Index() {
   const router = useRouter();
@@ -29,8 +29,8 @@ export default function Index() {
       setIsLoading(true);
 
       const response = await login(email.trim(), password);
-      const nextRoute = isAdminUser(response.user)
-        ? "/admin/dashboard"
+      const nextRoute = isStaffUser(response.user)
+        ? "/staff/dashboard"
         : "/user/dashboard";
 
       router.replace(nextRoute);
