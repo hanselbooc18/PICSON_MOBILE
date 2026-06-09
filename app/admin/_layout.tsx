@@ -37,6 +37,23 @@ export default function Layout() {
         }}
       />
 
+      <Tabs.Screen
+        name="scan"
+        options={{
+          title: "Scan QR",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="qr-code-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="patient/[qrCode]"
+        options={{
+          href: null,
+        }}
+      />
+
       {/* TRACKER */}
       <Tabs.Screen
         name="tracker"

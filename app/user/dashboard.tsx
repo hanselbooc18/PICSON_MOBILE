@@ -11,46 +11,34 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { getCurrentUser, logout, MobileUser } from "@/api/auth";
+import {
+  getCurrentUser,
+  getUserRole,
+  logout,
+  MobileUser,
+} from "@/api/auth";
 import {
   clinicResources,
   ClinicResource,
   listResource,
 } from "@/api/clinicResources";
 
-type ResourceSummary = {
+type UserSummary = {
   key: string;
   label: string;
   total: number;
-  latest?: string;
 };
 
-function formatDate(value?: string) {
-  if (!value) {
-    return "No records yet";
-  }
+const visibleResources = clinicResources.filter((resource) =>
+  ["patients", "visits", "vital_signs", "laboratory_results", "admissions"].includes(
+    resource.key
+  )
+);
 
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function getUserName(user: MobileUser | null) {
-  return user?.name || user?.email || "User";
-}
-
-export default function Dashboard() {
+export default function UserDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<MobileUser | null>(null);
-  const [summaries, setSummaries] = useState<ResourceSummary[]>([]);
+  const [summaries, setSummaries] = useState<UserSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,15 +54,13 @@ export default function Dashboard() {
     const [currentUser, resourceResults] = await Promise.all([
       getCurrentUser(),
       Promise.all(
-        clinicResources.map(async (resource: ClinicResource) => {
+        visibleResources.map(async (resource: ClinicResource) => {
           const response = await listResource(resource, 1);
-          const latest = response.data?.[0]?.created_at;
 
           return {
             key: resource.key,
             label: resource.label,
             total: response.total ?? response.data?.length ?? 0,
-            latest,
           };
         })
       ),
@@ -126,7 +112,7 @@ export default function Dashboard() {
         <View style={styles.topBar}>
           <View>
             <Text style={styles.brand}>PICSON Clinic</Text>
-            <Text style={styles.subtle}>Mobile Dashboard</Text>
+            <Text style={styles.subtle}>User Dashboard</Text>
           </View>
 
           <TouchableOpacity style={styles.iconButton} onPress={handleLogout}>
@@ -137,7 +123,7 @@ export default function Dashboard() {
         {isLoading ? (
           <View style={styles.center}>
             <ActivityIndicator color="#1E88E5" size="large" />
-            <Text style={styles.loadingText}>Loading records...</Text>
+            <Text style={styles.loadingText}>Loading your dashboard...</Text>
           </View>
         ) : (
           <ScrollView
@@ -146,19 +132,10 @@ export default function Dashboard() {
               <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
             }
           >
-            <View style={styles.hero}>
-              <Text style={styles.hello}>Hello, {getUserName(user)}</Text>
-              <Text style={styles.heroTitle}>Maternal records are ready.</Text>
-              <Text style={styles.heroText}>
-                Scan a maternal QR code to open the secured profile and prenatal records.
-              </Text>
-              <TouchableOpacity
-                style={styles.scanButton}
-                onPress={() => router.push("/admin/scan")}
-              >
-                <Ionicons name="qr-code-outline" size={18} color="#FFFFFF" />
-                <Text style={styles.scanButtonText}>Scan Patient QR</Text>
-              </TouchableOpacity>
+            <View style={styles.header}>
+              <Text style={styles.role}>{getUserRole(user) || "User"}</Text>
+              <Text style={styles.title}>Welcome, {user?.name || "User"}</Text>
+             
             </View>
 
             {error ? (
@@ -168,34 +145,24 @@ export default function Dashboard() {
               </View>
             ) : null}
 
-            <View style={styles.summaryRow}>
-              <View style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>Resources</Text>
-                <Text style={styles.summaryValue}>{summaries.length}</Text>
-              </View>
-              <View style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>Total Records</Text>
-                <Text style={styles.summaryValue}>{totalRecords}</Text>
-              </View>
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryLabel}>Available Records</Text>
+              <Text style={styles.summaryValue}>{totalRecords}</Text>
             </View>
 
-            <Text style={styles.sectionTitle}>Backend Files</Text>
+            <Text style={styles.sectionTitle}>My Clinic Files</Text>
 
-            <View style={styles.resourceList}>
+            <View style={styles.list}>
               {summaries.map((item) => (
-                <View key={item.key} style={styles.resourceItem}>
-                  <View style={styles.resourceIcon}>
-                    <Ionicons name="folder-open-outline" size={20} color="#1E88E5" />
+                <View key={item.key} style={styles.item}>
+                  <View style={styles.itemIcon}>
+                    <Ionicons name="document-text-outline" size={20} color="#1E88E5" />
                   </View>
-
-                  <View style={styles.resourceBody}>
-                    <Text style={styles.resourceTitle}>{item.label}</Text>
-                    <Text style={styles.resourceMeta}>
-                      Latest: {formatDate(item.latest)}
-                    </Text>
+                  <View style={styles.itemText}>
+                    <Text style={styles.itemTitle}>{item.label}</Text>
+                    <Text style={styles.itemSub}>Backend resource connected</Text>
                   </View>
-
-                  <Text style={styles.count}>{item.total}</Text>
+                  <Text style={styles.itemCount}>{item.total}</Text>
                 </View>
               ))}
             </View>
@@ -250,48 +217,32 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 18,
-    paddingBottom: 96,
+    paddingBottom: 60,
   },
-  hero: {
+  header: {
     backgroundColor: "#FFFFFF",
     borderColor: "#E5E7EB",
     borderRadius: 8,
     borderWidth: 1,
     padding: 18,
   },
-  hello: {
+  role: {
     color: "#1E88E5",
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: "800",
     marginBottom: 6,
   },
-  heroTitle: {
+  title: {
     color: "#0F172A",
     fontSize: 24,
     fontWeight: "800",
     lineHeight: 30,
   },
-  heroText: {
+  description: {
     color: "#64748B",
     fontSize: 13,
     lineHeight: 20,
     marginTop: 8,
-  },
-  scanButton: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    backgroundColor: "#1E88E5",
-    borderRadius: 8,
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-  },
-  scanButtonText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "800",
   },
   errorBox: {
     alignItems: "center",
@@ -309,17 +260,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
   },
-  summaryRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 14,
-  },
   summaryCard: {
     backgroundColor: "#FFFFFF",
     borderColor: "#E5E7EB",
     borderRadius: 8,
     borderWidth: 1,
-    flex: 1,
+    marginTop: 14,
     padding: 16,
   },
   summaryLabel: {
@@ -328,7 +274,7 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     color: "#0F172A",
-    fontSize: 26,
+    fontSize: 30,
     fontWeight: "800",
     marginTop: 6,
   },
@@ -339,10 +285,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 20,
   },
-  resourceList: {
+  list: {
     gap: 10,
   },
-  resourceItem: {
+  item: {
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderColor: "#E5E7EB",
@@ -351,7 +297,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 12,
   },
-  resourceIcon: {
+  itemIcon: {
     alignItems: "center",
     backgroundColor: "#EAF3FF",
     borderRadius: 8,
@@ -360,20 +306,20 @@ const styles = StyleSheet.create({
     marginRight: 12,
     width: 40,
   },
-  resourceBody: {
+  itemText: {
     flex: 1,
   },
-  resourceTitle: {
+  itemTitle: {
     color: "#0F172A",
     fontSize: 14,
     fontWeight: "700",
   },
-  resourceMeta: {
+  itemSub: {
     color: "#64748B",
     fontSize: 12,
     marginTop: 4,
   },
-  count: {
+  itemCount: {
     color: "#1E88E5",
     fontSize: 18,
     fontWeight: "800",

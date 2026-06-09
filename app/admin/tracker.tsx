@@ -42,7 +42,7 @@ export default function GrowthTracker() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Growth Curve</Text>
           <Text style={styles.cardSub}>
-            Leo's height and weight progression
+            Leo&apos;s height and weight progression
           </Text>
 
           <View style={styles.chartBox}>

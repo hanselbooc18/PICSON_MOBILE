@@ -45,7 +45,7 @@ export default function GrowthTracker() {
         {/* GROWTH CARD */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Growth Curve</Text>
-          <Text style={styles.cardSub}>Leo's height and weight progression</Text>
+          <Text style={styles.cardSub}>Leo&apos;s height and weight progression</Text>
 
           <View style={styles.chart}>
             <View style={styles.line} />

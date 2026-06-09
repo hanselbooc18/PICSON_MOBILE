@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { login } from "@/api/auth";
+import { isAdminUser, login } from "@/api/auth";
 
 export default function Index() {
   const router = useRouter();
@@ -27,8 +27,13 @@ export default function Index() {
 
     try {
       setIsLoading(true);
-      await login(email.trim(), password);
-      router.push("/admin/dashboard");
+
+      const response = await login(email.trim(), password);
+      const nextRoute = isAdminUser(response.user)
+        ? "/admin/dashboard"
+        : "/user/dashboard";
+
+      router.replace(nextRoute);
     } catch (error) {
       alert(error instanceof Error ? error.message : "Login failed");
     } finally {
