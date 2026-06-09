@@ -1,24 +1,55 @@
-const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
+import { apiRequest, setAccessToken } from "@/api/client";
+
+export type MobileUser = {
+  id: number | string;
+  name?: string;
+  email?: string;
+  roles_id?: number;
+  role?: string;
+  roles?: {
+    roles_id?: number;
+    role?: string;
+  } | null;
+};
+
+type LoginResponse = {
+  message: string;
+  token_type: "Bearer";
+  access_token: string;
+  user: MobileUser;
+};
 
 export async function login(email: string, password: string) {
-  if (!BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
-
-  const response = await fetch(`${BASE_URL}/api/mobile-login`, {
+  const json = await apiRequest<LoginResponse>("/api/mobile-login", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
+    body: {
+      email,
+      password,
+      device_name: "PICSON Mobile",
     },
-    body: JSON.stringify({ email, password }),
   });
 
-  const json = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(json?.error || json?.message || "Login failed");
-  }
+  setAccessToken(json.access_token);
 
   return json;
+}
+
+export function getUserRole(user?: MobileUser | null) {
+  return user?.roles?.role || user?.role || "";
+}
+
+export function isStaffUser(user?: MobileUser | null) {
+  return getUserRole(user).toLowerCase() === "staff";
+}
+
+export async function getCurrentUser() {
+  return apiRequest<MobileUser>("/api/user");
+}
+
+export async function logout() {
+  await apiRequest<{ message: string }>("/api/logout", {
+    method: "POST",
+  });
+
+  setAccessToken(null);
 }
