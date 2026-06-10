@@ -537,16 +537,7 @@ export default function UserDashboard() {
             <Text style={{ fontSize: 20, fontWeight: "700", color: "#1E293B", marginBottom: 4 }}>
               My Digital ID
             </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                color: "#64748B",
-                textAlign: "center",
-                marginBottom: 24,
-              }}
-            >
-              Present this QR code during your clinic visit for quick check-in.
-            </Text>
+            
 
             {/* QR Image */}
             <View
