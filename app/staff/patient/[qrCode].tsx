@@ -142,10 +142,7 @@ export default function StaffPatientProfileScreen() {
           <Text style={styles.fullName}>{profile.patient.full_name}</Text>
           <Text style={styles.patientMeta}>{profile.patient.qr_identifier}</Text>
         </View>
-        <TouchableOpacity style={styles.qrButton} onPress={() => setShowQrModal(true)}>
-          <Ionicons name="qr-code" size={20} color="#FFFFFF" />
-          <Text style={styles.qrButtonText}>Show QR</Text>
-        </TouchableOpacity>
+       
       </View>
 
       <View style={styles.section}>

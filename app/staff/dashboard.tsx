@@ -216,68 +216,9 @@ export default function AdminDashboard() {
                 <Text style={styles.scanButtonText}>Start Scanner</Text>
               </TouchableOpacity>
 
-              {/* ── MANUAL LOOKUP ── */}
-              <Text style={{ fontSize: 12, color: "#64748B", marginTop: 16, marginBottom: 8 }}>
-                Or enter manually:
-              </Text>
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                <TextInput
-                  placeholder="PICSON-MAT-000001"
-                  placeholderTextColor="#94A3B8"
-                  style={[styles.input, { flex: 1 }]}
-                  value={manualCode}
-                  onChangeText={setManualCode}
-                  editable={!isLocked}
-                />
-                <TouchableOpacity
-                  style={[styles.searchButton, isLocked && styles.buttonDisabled]}
-                  onPress={() => openProfile(manualCode)}
-                  disabled={isLocked}
-                >
-                  <Ionicons name="search-outline" size={20} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
+             
 
-              {error && (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
-                    backgroundColor: "#FEF2F2",
-                    borderWidth: 1,
-                    borderColor: "#FECACA",
-                    borderRadius: 8,
-                    padding: 12,
-                    marginTop: 12,
-                  }}
-                >
-                  <Ionicons name="alert-circle-outline" size={18} color="#B91C1C" />
-                  <Text style={{ color: "#B91C1C", fontSize: 12, flex: 1 }}>
-                    {error}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* ── INFO CARD ── */}
-            <View
-              style={[
-                styles.card,
-                {
-                  backgroundColor: "#F0F9FF",
-                  borderColor: "#BFDBFE",
-                },
-              ]}
-            >
-              <Text style={{ fontSize: 14, fontWeight: "600", color: "#1E40AF", marginBottom: 8 }}>
-                ℹ️ How it works
-              </Text>
-              <Text style={{ fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
-                1. Patients provide their printed QR card{"\n"}
-                2. Scan the code or enter manually{"\n"}
-                3. View the patient's full maternal record
-              </Text>
+             
             </View>
           </ScrollView>
         ) : (
