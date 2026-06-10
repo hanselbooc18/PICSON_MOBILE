@@ -51,12 +51,47 @@ export default function StaffPatientProfileScreen() {
     fetchProfile();
   }, [qrCode]);
 
+  const renderRecordField = (label: string, value: unknown) => {
+    if (value === undefined || value === null || value === "") {
+      return null;
+    }
+
+    return (
+      <Text key={label} style={styles.recordDetail}>
+        {label}: {String(value)}
+      </Text>
+    );
+  };
+
+  const renderAdmissionRecord = (item: Record<string, unknown>) => {
+    const admission = item as Record<string, unknown>;
+
+    return (
+      <View style={styles.recordDetails}>
+        {renderRecordField('Rapid Plasma Reagin', admission.rapid_plasma_reagin)}
+        {renderRecordField('HIV', admission.hiv)}
+        {renderRecordField('Hemoglobin', admission.hemoglobin)}
+        {renderRecordField('Admitted', admission.date_time_admitted ?? admission.created_at)}
+        {renderRecordField('Stage of Labor', admission.stage_of_labor)}
+        {renderRecordField('Status', admission.status)}
+        {renderRecordField('Patient ID', admission.patient_id)}
+      </View>
+    );
+  };
+
   const renderRecordItem = (item: Record<string, unknown>) => {
-    const title = item.created_at || item.updated_at || item.id || "Record";
+    const title = item.date_time_admitted || item.created_at || item.updated_at || item.id || "Record";
+    // Check if this looks like an admission record
+    const isAdmission = item.rapid_plasma_reagin !== undefined || item.hiv !== undefined || item.hemoglobin !== undefined;
+
     return (
       <View style={styles.recordRow}>
         <Text style={styles.recordTitle}>{String(title)}</Text>
-        <Text style={styles.recordText}>{JSON.stringify(item, null, 2)}</Text>
+        {isAdmission ? (
+          renderAdmissionRecord(item)
+        ) : (
+          <Text style={styles.recordText}>{JSON.stringify(item, null, 2)}</Text>
+        )}
       </View>
     );
   };
@@ -261,21 +296,33 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   recordRow: {
-    backgroundColor: "#F8FAFC",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
   },
   recordTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 6,
+    color: "#1E88E5",
+    marginBottom: 10,
   },
   recordText: {
     fontSize: 12,
     color: "#475569",
     lineHeight: 18,
+  },
+  recordDetails: {
+    marginTop: 0,
+  },
+  recordDetail: {
+    fontSize: 13,
+    color: "#334155",
+    lineHeight: 20,
+    marginBottom: 6,
+    fontWeight: "500",
   },
   emptyText: {
     fontSize: 13,
