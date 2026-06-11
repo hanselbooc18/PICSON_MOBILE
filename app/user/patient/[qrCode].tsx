@@ -8,6 +8,7 @@ import {
   Modal,
   StyleSheet,
   Image,
+  FlatList,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -47,6 +48,76 @@ export default function TrackerProfileScreen() {
 
     fetchData();
   }, [qrCode]);
+
+  const formatRecordLabel = (key: string) =>
+    key
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (match) => match.toUpperCase());
+
+  const renderGenericRecordDetails = (item: Record<string, unknown>) => {
+    return (
+      <View style={styles.recordDetails}>
+        {Object.entries(item)
+          .filter(([key, value]) =>
+            value !== undefined && value !== null && value !== "" && key !== "deleted_at"
+          )
+          .map(([key, value]) => (
+            <Text key={key} style={styles.recordDetail}>
+              {formatRecordLabel(key)}: {typeof value === "object" ? JSON.stringify(value) : String(value)}
+            </Text>
+          ))}
+      </View>
+    );
+  };
+
+  const renderAdmissionRecord = (item: Record<string, unknown>) => {
+    const admission = item as Record<string, unknown>;
+
+    return (
+      <View style={styles.recordDetails}>
+        {admission.date_time_admitted || admission.created_at ? (
+          <Text style={styles.recordDetail}>Admitted: {String(admission.date_time_admitted ?? admission.created_at)}</Text>
+        ) : null}
+        {admission.stage_of_labor ? (
+          <Text style={styles.recordDetail}>Stage Of Labor: {String(admission.stage_of_labor)}</Text>
+        ) : null}
+        {admission.status ? (
+          <Text style={styles.recordDetail}>Status: {String(admission.status)}</Text>
+        ) : null}
+      </View>
+    );
+  };
+
+  const renderRecordItem = (item: Record<string, unknown>) => {
+    const title = item.date_time_admitted || item.created_at || item.updated_at || item.id || "Record";
+    const isAdmission = item.rapid_plasma_reagin !== undefined || item.hiv !== undefined || item.hemoglobin !== undefined;
+
+    return (
+      <View style={styles.recordRow}>
+        <Text style={styles.recordTitle}>{String(title)}</Text>
+        {isAdmission ? renderAdmissionRecord(item) : renderGenericRecordDetails(item)}
+      </View>
+    );
+  };
+
+  const renderSection = (title: string, items: Record<string, unknown>[]) => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.sectionMeta}>{items.length} item{items.length === 1 ? "" : "s"}</Text>
+      </View>
+      {items.length === 0 ? (
+        <Text style={styles.emptyText}>No records available.</Text>
+      ) : (
+        <FlatList
+          data={items}
+          scrollEnabled={false}
+          keyExtractor={(item, index) => `${String(item.id ?? index)}-${index}`}
+          renderItem={({ item }) => renderRecordItem(item)}
+        />
+      )}
+    </View>
+  );
 
   if (loading) {
     return (
@@ -93,12 +164,28 @@ export default function TrackerProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Pregnancy History</Text>
-          <Text style={styles.dataLabel}>Gravida: {profile.pregnancy_history.gravida}</Text>
-          <Text style={styles.dataLabel}>Term: {profile.pregnancy_history.term_births}</Text>
-          <Text style={styles.dataLabel}>Preterm: {profile.pregnancy_history.preterm_births}</Text>
-          <Text style={styles.dataLabel}>Living: {profile.pregnancy_history.living_children}</Text>
+          <Text style={styles.sectionTitle}>Patient Details</Text>
+          <Text style={styles.dataLabel}>Name: {profile.patient.full_name}</Text>
+          <Text style={styles.dataLabel}>Birth date: {profile.patient.birth_date ?? "—"}</Text>
+          <Text style={styles.dataLabel}>Address: {profile.patient.address ?? "—"}</Text>
+          <Text style={styles.dataLabel}>Contact: {profile.patient.contact_number ?? "—"}</Text>
+          <Text style={styles.dataLabel}>Blood type: {profile.patient.blood_type ?? "—"}</Text>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Pregnancy History</Text>
+          <Text style={styles.dataLabel}>Gravida: {profile.pregnancy_history.gravida ?? "—"}</Text>
+          <Text style={styles.dataLabel}>Term births: {profile.pregnancy_history.term_births ?? "—"}</Text>
+          <Text style={styles.dataLabel}>Preterm births: {profile.pregnancy_history.preterm_births ?? "—"}</Text>
+          <Text style={styles.dataLabel}>Living children: {profile.pregnancy_history.living_children ?? "—"}</Text>
+        </View>
+
+        {/* Records sections */}
+        {renderSection("Vital Signs", profile.prenatal_records.vital_signs)}
+        {renderSection("Laboratory Results", profile.prenatal_records.laboratory_results)}
+        {renderSection("Admissions", profile.prenatal_records.admissions)}
+        {renderSection("Medication Sheets", profile.prenatal_records.medication_sheets)}
+        {renderSection("Recent Consultations", profile.recent_consultations)}
       </ScrollView>
 
       <Modal
@@ -200,6 +287,48 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#475569",
     marginBottom: 8,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  sectionMeta: {
+    fontSize: 12,
+    color: "#94A3B8",
+  },
+  recordRow: {
+    marginBottom: 12,
+  },
+  recordTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 6,
+  },
+  recordDetails: {
+    backgroundColor: "#FAFBFD",
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#EEF2FF",
+  },
+  recordDetail: {
+    fontSize: 13,
+    color: "#334155",
+    marginBottom: 6,
+  },
+  recordText: {
+    fontFamily: undefined,
+    fontSize: 13,
+    color: "#334155",
+  },
+  emptyText: {
+    color: "#94A3B8",
+    fontSize: 13,
+    textAlign: "center",
+    paddingVertical: 10,
   },
   modalOverlay: {
     alignItems: "center",
