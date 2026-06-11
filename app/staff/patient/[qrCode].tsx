@@ -28,7 +28,7 @@ export default function StaffPatientProfileScreen() {
         setProfile(data);
       } catch (err) {
         let message = "Unable to load patient record. Please try again.";
-
+s
         if (err instanceof Error) {
           if (err.message.includes("Unauthenticated")) {
             message = "Session expired. Please log in again.";
@@ -63,6 +63,27 @@ export default function StaffPatientProfileScreen() {
     );
   };
 
+  const formatRecordLabel = (key: string) =>
+    key
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (match) => match.toUpperCase());
+
+  const renderGenericRecordDetails = (item: Record<string, unknown>) => {
+    return (
+      <View style={styles.recordDetails}>
+        {Object.entries(item)
+          .filter(([key, value]) =>
+            value !== undefined && value !== null && value !== "" && key !== "deleted_at"
+          )
+          .map(([key, value]) => (
+            <Text key={key} style={styles.recordDetail}>
+              {formatRecordLabel(key)}: {typeof value === "object" ? JSON.stringify(value) : String(value)}
+            </Text>
+          ))}
+      </View>
+    );
+  };
+
   const renderAdmissionRecord = (item: Record<string, unknown>) => {
     const admission = item as Record<string, unknown>;
 
@@ -80,18 +101,17 @@ export default function StaffPatientProfileScreen() {
   };
 
   const renderRecordItem = (item: Record<string, unknown>) => {
-    const title = item.date_time_admitted || item.created_at || item.updated_at || item.id || "Record";
-    // Check if this looks like an admission record
-    const isAdmission = item.rapid_plasma_reagin !== undefined || item.hiv !== undefined || item.hemoglobin !== undefined;
+    const title =
+      item.date_time_admitted || item.created_at || item.updated_at || item.id || "Record";
+    const isAdmission =
+      item.rapid_plasma_reagin !== undefined ||
+      item.hiv !== undefined ||
+      item.hemoglobin !== undefined;
 
     return (
       <View style={styles.recordRow}>
         <Text style={styles.recordTitle}>{String(title)}</Text>
-        {isAdmission ? (
-          renderAdmissionRecord(item)
-        ) : (
-          <Text style={styles.recordText}>{JSON.stringify(item, null, 2)}</Text>
-        )}
+        {isAdmission ? renderAdmissionRecord(item) : renderGenericRecordDetails(item)}
       </View>
     );
   };
@@ -162,11 +182,10 @@ export default function StaffPatientProfileScreen() {
         <Text style={styles.dataLabel}>Living children: {profile.pregnancy_history.living_children ?? "—"}</Text>
       </View>
 
-      {renderSection("Vital Signs", profile.prenatal_records.vital_signs)}
       {renderSection("Laboratory Results", profile.prenatal_records.laboratory_results)}
       {renderSection("Admissions", profile.prenatal_records.admissions)}
       {renderSection("Medication Sheets", profile.prenatal_records.medication_sheets)}
-      {renderSection("Recent Consultations", profile.recent_consultations)}
+  
 
       <Modal visible={showQrModal} transparent animationType="fade" onRequestClose={() => setShowQrModal(false)}>
         <View style={styles.modalOverlay}>

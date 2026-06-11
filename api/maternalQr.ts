@@ -39,6 +39,13 @@ export type MaternalQrProfile = {
   pregnancy_history: PregnancyHistory;
   prenatal_records: PrenatalRecords;
   recent_consultations: ApiRecord[];
+  record_counts?: {
+    visits: number;
+    vital_signs: number;
+    laboratory_results: number;
+    admissions: number;
+    medication_sheets: number;
+  };
 };
 
 export function getMaternalProfileByQr(qrIdentifier: string) {

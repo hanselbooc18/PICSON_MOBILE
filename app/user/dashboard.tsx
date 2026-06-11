@@ -77,7 +77,7 @@ export default function UserDashboard() {
   const loadDashboard = useCallback(async () => {
     setError(null);
 
-    const [currentUser, profileData, resourceResults] = await Promise.all([
+    const [currentUser, profileData] = await Promise.all([
       getCurrentUser(),
       getMyMaternalProfile().catch((err) => {
         setError(
@@ -87,7 +87,29 @@ export default function UserDashboard() {
         );
         return null;
       }),
-      Promise.all(
+    ]);
+
+    let resourceResults: UserSummary[] = [];
+
+    if (profileData) {
+      const counts = {
+        patients: 1,
+        visits: profileData.record_counts?.visits ?? profileData.recent_consultations?.length ?? 0,
+        vital_signs:
+          profileData.record_counts?.vital_signs ?? profileData.prenatal_records.vital_signs.length ?? 0,
+        laboratory_results:
+          profileData.record_counts?.laboratory_results ?? profileData.prenatal_records.laboratory_results.length ?? 0,
+        admissions:
+          profileData.record_counts?.admissions ?? profileData.prenatal_records.admissions.length ?? 0,
+      };
+
+      resourceResults = visibleResources.map((resource) => ({
+        key: resource.key,
+        label: resource.label,
+        total: counts[resource.key] ?? 0,
+      }));
+    } else {
+      const listResults = await Promise.all(
         visibleResources.map(async (resource: ClinicResource) => {
           const response = await listResource(resource, 1);
           return {
@@ -96,8 +118,10 @@ export default function UserDashboard() {
             total: response.total ?? response.data?.length ?? 0,
           };
         })
-      ),
-    ]);
+      );
+
+      resourceResults = listResults;
+    }
 
     setUser(currentUser);
     setProfile(profileData);
@@ -187,22 +211,7 @@ export default function UserDashboard() {
             {/* Actions */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               {/* Notification */}
-              <Pressable style={{ padding: 8, position: "relative" }}>
-                <Ionicons name="notifications-outline" size={24} color="#94A3B8" />
-                <View
-                  style={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: "#EF4444",
-                    borderWidth: 2,
-                    borderColor: "#FFFFFF",
-                  }}
-                />
-              </Pressable>
+              
 
               {/* Logout */}
               <TouchableOpacity
@@ -414,86 +423,6 @@ export default function UserDashboard() {
                 <Ionicons name="chevron-forward-outline" size={20} color="#2563EB" />
               </TouchableOpacity>
             )}
-
-            {/* ── CLINIC FILES ── */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={{ fontSize: 17, fontWeight: "800", color: "#1E293B" }}>
-                My Clinic Files
-              </Text>
-              <Text style={{ fontSize: 12, color: "#2563EB", fontWeight: "500" }}>
-                View All
-              </Text>
-            </View>
-
-            <View style={{ gap: 10 }}>
-              {summaries.map((item) => (
-                <View
-                  key={item.key}
-                  style={{
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: "#F1F5F9",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    padding: 14,
-                    shadowColor: "#0F172A",
-                    shadowOpacity: 0.03,
-                    shadowRadius: 4,
-                    elevation: 1,
-                  }}
-                >
-                  {/* Icon */}
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 10,
-                      backgroundColor: "#EFF6FF",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: 14,
-                    }}
-                  >
-                    <Ionicons
-                      name={RESOURCE_ICONS[item.key] ?? "document-text-outline"}
-                      size={22}
-                      color="#2563EB"
-                    />
-                  </View>
-
-                  {/* Text */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: "#0F172A" }}>
-                      {item.label}
-                    </Text>
-                    <Text style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>
-                      Backend resource connected
-                    </Text>
-                  </View>
-
-                  {/* Count */}
-                  <Text
-                    style={{
-                      fontSize: 20,
-                      fontWeight: "800",
-                      color: item.total > 0 ? "#2563EB" : "#CBD5E1",
-                      minWidth: 30,
-                      textAlign: "right",
-                    }}
-                  >
-                    {item.total}
-                  </Text>
-                </View>
-              ))}
-            </View>
 
           </ScrollView>
         )}

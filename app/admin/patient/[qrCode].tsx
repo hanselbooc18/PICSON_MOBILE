@@ -49,6 +49,27 @@ export default function AdminPatientProfileScreen() {
     );
   };
 
+  const formatRecordLabel = (key: string) =>
+    key
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (match) => match.toUpperCase());
+
+  const renderGenericRecordDetails = (item: Record<string, unknown>) => {
+    return (
+      <View style={styles.recordDetails}>
+        {Object.entries(item)
+          .filter(([key, value]) =>
+            value !== undefined && value !== null && value !== "" && key !== "deleted_at"
+          )
+          .map(([key, value]) => (
+            <Text key={key} style={styles.recordDetail}>
+              {formatRecordLabel(key)}: {typeof value === "object" ? JSON.stringify(value) : String(value)}
+            </Text>
+          ))}
+      </View>
+    );
+  };
+
   const renderAdmissionRecord = (item: Record<string, unknown>) => {
     const admission = item as Record<string, unknown>;
 
@@ -67,17 +88,15 @@ export default function AdminPatientProfileScreen() {
 
   const renderRecordItem = (item: Record<string, unknown>) => {
     const createdAt = item.date_time_admitted || item.created_at || item.updated_at || item.id || "-";
-    // Check if this looks like an admission record
-    const isAdmission = item.rapid_plasma_reagin !== undefined || item.hiv !== undefined || item.hemoglobin !== undefined;
+    const isAdmission =
+      item.rapid_plasma_reagin !== undefined ||
+      item.hiv !== undefined ||
+      item.hemoglobin !== undefined;
 
     return (
       <View style={styles.recordRow}>
         <Text style={styles.recordTitle}>{String(createdAt)}</Text>
-        {isAdmission ? (
-          renderAdmissionRecord(item)
-        ) : (
-          <Text style={styles.recordText}>{JSON.stringify(item, null, 2)}</Text>
-        )}
+        {isAdmission ? renderAdmissionRecord(item) : renderGenericRecordDetails(item)}
       </View>
     );
   };
