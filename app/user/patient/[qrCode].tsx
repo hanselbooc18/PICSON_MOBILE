@@ -7,25 +7,39 @@ import {
   TouchableOpacity,
   Modal,
   StyleSheet,
+  Image,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getMaternalProfileByQr } from "@/api/maternalQr";
+import { getMyMaternalProfile } from "@/api/maternalQr";
 
 export default function TrackerProfileScreen() {
   const { qrCode } = useLocalSearchParams();
 
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getMaternalProfileByQr(String(qrCode));
-        setProfile(data);
+        const data = await getMyMaternalProfile();
+
+        if (qrCode && String(data?.patient?.qr_identifier) !== String(qrCode)) {
+          setError("You can only view your own maternal profile from this screen.");
+          setProfile(null);
+        } else {
+          setProfile(data);
+          setError(null);
+        }
       } catch (err) {
         console.log(err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to load your maternal profile."
+        );
       } finally {
         setLoading(false);
       }
@@ -40,6 +54,17 @@ export default function TrackerProfileScreen() {
         <ActivityIndicator size="large" color="#1E88E5" />
         <Text style={{ textAlign: "center", marginTop: 10 }}>
           Loading patient record...
+        </Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24 }}>
+        <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: "#1F2937", textAlign: "center" }}>
+          {error}
         </Text>
       </View>
     );
@@ -94,7 +119,15 @@ export default function TrackerProfileScreen() {
             <Text style={styles.modalTitle}>Your QR Code</Text>
             <View style={styles.qrContainer}>
               <View style={styles.qrPlaceholder}>
-                <Ionicons name="qr-code" size={80} color="#1E88E5" />
+                <Image
+                  source={{
+                    uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
+                      profile.patient.qr_identifier
+                    )}`,
+                  }}
+                  style={styles.qrImage}
+                  resizeMode="contain"
+                />
               </View>
               <Text style={styles.qrIdentifier}>{profile.patient.qr_identifier}</Text>
             </View>
@@ -204,6 +237,11 @@ const styles = StyleSheet.create({
     height: 200,
     justifyContent: "center",
     width: 200,
+    overflow: "hidden",
+  },
+  qrImage: {
+    width: "100%",
+    height: "100%",
   },
   qrIdentifier: {
     color: "#0F172A",
