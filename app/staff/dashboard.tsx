@@ -205,7 +205,7 @@ export default function AdminDashboard() {
               </View>
 
               <Text style={styles.cardDescription}>
-                Scan or manually enter a patient QR code to view their maternal record.
+                Scan patient QR code to view their maternal record.
               </Text>
 
               <TouchableOpacity
@@ -215,8 +215,6 @@ export default function AdminDashboard() {
                 <Ionicons name="camera-outline" size={20} color="#FFFFFF" />
                 <Text style={styles.scanButtonText}>Start Scanner</Text>
               </TouchableOpacity>
-
-             
 
              
             </View>
