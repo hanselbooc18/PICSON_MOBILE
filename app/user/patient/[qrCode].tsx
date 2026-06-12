@@ -53,13 +53,24 @@ export default function TrackerProfileScreen() {
     key
       .replace(/_/g, " ")
       .replace(/\b\w/g, (match) => match.toUpperCase());
+  const HIDDEN_RECORD_KEYS = [
+    "id",
+    "patient_id",
+    "laboratory_result_id",
+    "created_at",
+    "updated_at",
+  ];
 
   const renderGenericRecordDetails = (item: Record<string, unknown>) => {
     return (
       <View style={styles.recordDetails}>
         {Object.entries(item)
           .filter(([key, value]) =>
-            value !== undefined && value !== null && value !== "" && key !== "deleted_at"
+            value !== undefined &&
+            value !== null &&
+            value !== "" &&
+            key !== "deleted_at" &&
+            !HIDDEN_RECORD_KEYS.includes(key)
           )
           .map(([key, value]) => (
             <Text key={key} style={styles.recordDetail}>
@@ -89,7 +100,18 @@ export default function TrackerProfileScreen() {
   };
 
   const renderRecordItem = (item: Record<string, unknown>) => {
-    const title = item.date_time_admitted || item.created_at || item.updated_at || item.id || "Record";
+    const rawDate =
+  item.date_time_admitted || item.created_at || item.updated_at;
+
+const title = rawDate
+  ? new Date(String(rawDate)).toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  : "Record";
     const isAdmission = item.rapid_plasma_reagin !== undefined || item.hiv !== undefined || item.hemoglobin !== undefined;
 
     return (
@@ -181,11 +203,11 @@ export default function TrackerProfileScreen() {
         </View>
 
         {/* Records sections */}
-        {renderSection("Vital Signs", profile.prenatal_records.vital_signs)}
+ 
         {renderSection("Laboratory Results", profile.prenatal_records.laboratory_results)}
         {renderSection("Admissions", profile.prenatal_records.admissions)}
         {renderSection("Medication Sheets", profile.prenatal_records.medication_sheets)}
-        {renderSection("Recent Consultations", profile.recent_consultations)}
+       
       </ScrollView>
 
       <Modal

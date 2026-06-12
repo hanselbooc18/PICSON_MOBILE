@@ -28,7 +28,7 @@ export default function StaffPatientProfileScreen() {
         setProfile(data);
       } catch (err) {
         let message = "Unable to load patient record. Please try again.";
-s
+
         if (err instanceof Error) {
           if (err.message.includes("Unauthenticated")) {
             message = "Session expired. Please log in again.";
@@ -67,13 +67,24 @@ s
     key
       .replace(/_/g, " ")
       .replace(/\b\w/g, (match) => match.toUpperCase());
+  const HIDDEN_RECORD_KEYS = [
+    "id",
+    "patient_id",
+    "laboratory_result_id",
+    "created_at",
+    "updated_at",
+  ];
 
   const renderGenericRecordDetails = (item: Record<string, unknown>) => {
     return (
       <View style={styles.recordDetails}>
         {Object.entries(item)
           .filter(([key, value]) =>
-            value !== undefined && value !== null && value !== "" && key !== "deleted_at"
+            value !== undefined &&
+            value !== null &&
+            value !== "" &&
+            key !== "deleted_at" &&
+            !HIDDEN_RECORD_KEYS.includes(key)
           )
           .map(([key, value]) => (
             <Text key={key} style={styles.recordDetail}>
@@ -92,17 +103,27 @@ s
         {renderRecordField('Rapid Plasma Reagin', admission.rapid_plasma_reagin)}
         {renderRecordField('HIV', admission.hiv)}
         {renderRecordField('Hemoglobin', admission.hemoglobin)}
-        {renderRecordField('Admitted', admission.date_time_admitted ?? admission.created_at)}
+
         {renderRecordField('Stage of Labor', admission.stage_of_labor)}
         {renderRecordField('Status', admission.status)}
-        {renderRecordField('Patient ID', admission.patient_id)}
+      
       </View>
     );
   };
 
   const renderRecordItem = (item: Record<string, unknown>) => {
-    const title =
-      item.date_time_admitted || item.created_at || item.updated_at || item.id || "Record";
+const rawDate =
+  item.date_time_admitted || item.created_at || item.updated_at;
+
+const title = rawDate
+  ? new Date(String(rawDate)).toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  : "Record";
     const isAdmission =
       item.rapid_plasma_reagin !== undefined ||
       item.hiv !== undefined ||

@@ -1,7 +1,7 @@
 import { apiRequest, ApiRecord } from "@/api/client";
 
 export type MaternalPatient = {
-  id: number | string;
+
   qr_identifier: string;
   full_name: string;
   first_name?: string;
