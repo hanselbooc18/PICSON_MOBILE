@@ -31,11 +31,21 @@ export function getAccessToken() {
 }
 
 export function getApiBaseUrl() {
-  if (!BASE_URL) {
-    throw new Error("API base URL is not configured");
+  if (BASE_URL) {
+    return BASE_URL;
   }
 
-  return BASE_URL;
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return "http://192.168.100.151:8000";
+    }
+
+    return `${window.location.protocol}//${hostname}:8000`;
+  }
+
+  throw new Error("API base URL is not configured");
 }
 
 export async function apiRequest<T>(
